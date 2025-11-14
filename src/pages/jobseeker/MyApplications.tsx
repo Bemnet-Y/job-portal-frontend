@@ -1,35 +1,36 @@
-import React, { useState, useEffect } from 'react'
-import type { Application } from '../../types'
-import { applicationAPI } from '../../lib/api'
-import Navigation from '../../components/Navigation'
-import Button from '../../components/Button'
-import { formatDate } from '../../lib/utils'
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import type { Application } from "../../types";
+import { applicationAPI } from "../../lib/api";
+import Navigation from "../../components/Navigation";
+import Button from "../../components/Button";
+import { formatDate } from "../../lib/utils";
 
 const MyApplications: React.FC = () => {
-  const [applications, setApplications] = useState<Application[]>([])
-  const [loading, setLoading] = useState(true)
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadApplications()
-  }, [])
+    loadApplications();
+  }, []);
 
   const loadApplications = async () => {
     try {
-      const response = await applicationAPI.getMyApplications()
-      setApplications(response.data)
+      const response = await applicationAPI.getMyApplications();
+      setApplications(response.data);
     } catch (error) {
-      console.error('Failed to load applications:', error)
+      console.error("Failed to load applications:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getStatusBadge = (status: string) => {
     const statusConfig: any = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      accepted: 'bg-green-100 text-green-800',
-      rejected: 'bg-red-100 text-red-800',
-    }
+      pending: "bg-yellow-100 text-yellow-800 border border-yellow-200",
+      accepted: "bg-green-100 text-green-800 border border-green-200",
+      rejected: "bg-red-100 text-red-800 border border-red-200",
+    };
 
     return (
       <span
@@ -37,15 +38,15 @@ const MyApplications: React.FC = () => {
       >
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
-    )
-  }
+    );
+  };
 
   const downloadResume = (resume: string, jobTitle: string) => {
-    const link = document.createElement('a')
-    link.href = resume
-    link.download = `Resume_${jobTitle.replace(/\s+/g, '_')}.pdf`
-    link.click()
-  }
+    const link = document.createElement("a");
+    link.href = resume;
+    link.download = `Resume_${jobTitle.replace(/\s+/g, "_")}.pdf`;
+    link.click();
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -59,6 +60,34 @@ const MyApplications: React.FC = () => {
           </p>
         </div>
 
+        {/* Application Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-2xl font-bold text-gray-900">
+              {applications.length}
+            </div>
+            <div className="text-sm text-gray-600">Total Applications</div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-2xl font-bold text-yellow-600">
+              {applications.filter((app) => app.status === "pending").length}
+            </div>
+            <div className="text-sm text-gray-600">Pending</div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-2xl font-bold text-green-600">
+              {applications.filter((app) => app.status === "accepted").length}
+            </div>
+            <div className="text-sm text-gray-600">Accepted</div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-2xl font-bold text-red-600">
+              {applications.filter((app) => app.status === "rejected").length}
+            </div>
+            <div className="text-sm text-gray-600">Rejected</div>
+          </div>
+        </div>
+
         {loading ? (
           <div className="flex justify-center items-center h-32">
             <div className="text-lg">Loading applications...</div>
@@ -66,7 +95,7 @@ const MyApplications: React.FC = () => {
         ) : (
           <div className="space-y-6">
             {applications.map((application) => {
-              const job = application.job as any
+              const job = application.job as any;
               return (
                 <div
                   key={application._id}
@@ -75,9 +104,11 @@ const MyApplications: React.FC = () => {
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-center space-x-4 mb-3">
-                        <h3 className="text-xl font-semibold text-gray-900">
-                          {job.title}
-                        </h3>
+                        <Link to={`/jobs/${job._id}`}>
+                          <h3 className="text-xl font-semibold text-gray-900 hover:text-blue-600">
+                            {job.title}
+                          </h3>
+                        </Link>
                         {getStatusBadge(application.status)}
                       </div>
 
@@ -89,17 +120,20 @@ const MyApplications: React.FC = () => {
                           <strong>Location:</strong> {job.location}
                         </div>
                         <div>
-                          <strong>Type:</strong> {job.type}
+                          <strong>Type:</strong>{" "}
+                          <span className="capitalize">
+                            {job.type.replace("-", " ")}
+                          </span>
                         </div>
                         <div>
-                          <strong>Applied:</strong>{' '}
+                          <strong>Applied:</strong>{" "}
                           {formatDate(application.appliedAt)}
                         </div>
                       </div>
 
                       <div className="mb-4">
                         <strong className="text-gray-700">Cover Letter:</strong>
-                        <p className="text-gray-600 mt-1 line-clamp-3">
+                        <p className="text-gray-600 mt-1 whitespace-pre-line">
                           {application.coverLetter}
                         </p>
                       </div>
@@ -118,7 +152,7 @@ const MyApplications: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="ml-6 space-y-3">
+                    <div className="ml-6 space-y-3 min-w-[200px]">
                       <Button
                         variant="outline"
                         size="sm"
@@ -129,7 +163,7 @@ const MyApplications: React.FC = () => {
                         Download Resume
                       </Button>
 
-                      {application.status === 'accepted' && (
+                      {application.status === "accepted" && (
                         <div className="bg-green-50 border border-green-200 rounded-md p-3">
                           <p className="text-sm text-green-700 font-medium">
                             🎉 Congratulations!
@@ -139,10 +173,21 @@ const MyApplications: React.FC = () => {
                           </p>
                         </div>
                       )}
+
+                      {application.status === "rejected" && (
+                        <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                          <p className="text-sm text-red-700 font-medium">
+                            Application Not Selected
+                          </p>
+                          <p className="text-sm text-red-600">
+                            Keep applying to other opportunities!
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-              )
+              );
             })}
 
             {applications.length === 0 && (
@@ -154,16 +199,16 @@ const MyApplications: React.FC = () => {
                 <p className="text-gray-500 mb-4">
                   Start applying to jobs to see your applications here.
                 </p>
-                <Button onClick={() => (window.location.href = '/jobs')}>
-                  Browse Jobs
-                </Button>
+                <Link to="/jobs">
+                  <Button>Browse Jobs</Button>
+                </Link>
               </div>
             )}
           </div>
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default MyApplications
+export default MyApplications;

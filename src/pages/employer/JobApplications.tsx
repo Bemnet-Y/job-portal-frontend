@@ -1,62 +1,67 @@
-import React, { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
-import type { Application, Job } from '../../types'
-import { jobAPI } from '../../lib/api'
-import Navigation from '../../components/Navigation'
-import Button from '../../components/Button'
-import { formatDate } from '../../lib/utils'
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import type { Application, Job } from "../../types";
+import { jobAPI } from "../../lib/api";
+import Navigation from "../../components/Navigation";
+import Button from "../../components/Button";
+import { formatDate } from "../../lib/utils";
 
 const JobApplications: React.FC = () => {
-  const { jobId } = useParams<{ jobId: string }>()
-  const [applications, setApplications] = useState<Application[]>([])
-  const [job, setJob] = useState<Job | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { jobId } = useParams<{ jobId: string }>();
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [job, setJob] = useState<Job | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     if (jobId) {
-      loadApplications()
-      loadJob()
+      loadApplications();
+      loadJob();
     }
-  }, [jobId])
+  }, [jobId]);
 
   const loadApplications = async () => {
     try {
-      const response = await jobAPI.getJobApplications(jobId!)
-      setApplications(response.data)
+      const response = await jobAPI.getJobApplications(jobId!);
+      setApplications(response.data);
     } catch (error) {
-      console.error('Failed to load applications:', error)
+      console.error("Failed to load applications:", error);
     }
-  }
+  };
 
   const loadJob = async () => {
     try {
-      const response = await jobAPI.getJob(jobId!)
-      setJob(response.data)
+      const response = await jobAPI.getJob(jobId!);
+      setJob(response.data);
     } catch (error) {
-      console.error('Failed to load job:', error)
+      console.error("Failed to load job:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const updateApplicationStatus = async (
     applicationId: string,
     status: string
   ) => {
     try {
-      await jobAPI.updateApplicationStatus(applicationId, status)
-      loadApplications() // Reload applications
+      setActionLoading(applicationId);
+      await jobAPI.updateApplicationStatus(applicationId, status);
+      await loadApplications(); // Reload applications
     } catch (error) {
-      console.error('Failed to update application status:', error)
+      console.error("Failed to update application status:", error);
+      alert("Failed to update application status");
+    } finally {
+      setActionLoading(null);
     }
-  }
+  };
 
   const getStatusBadge = (status: string) => {
     const statusConfig: any = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      accepted: 'bg-green-100 text-green-800',
-      rejected: 'bg-red-100 text-red-800',
-    }
+      pending: "bg-yellow-100 text-yellow-800",
+      accepted: "bg-green-100 text-green-800",
+      rejected: "bg-red-100 text-red-800",
+    };
 
     return (
       <span
@@ -64,15 +69,15 @@ const JobApplications: React.FC = () => {
       >
         {status}
       </span>
-    )
-  }
+    );
+  };
 
   const downloadResume = (resume: string, candidateName: string) => {
-    const link = document.createElement('a')
-    link.href = resume
-    link.download = `${candidateName.replace(/\s+/g, '_')}_resume.pdf`
-    link.click()
-  }
+    const link = document.createElement("a");
+    link.href = resume;
+    link.download = `${candidateName.replace(/\s+/g, "_")}_resume.pdf`;
+    link.click();
+  };
 
   if (loading) {
     return (
@@ -82,7 +87,7 @@ const JobApplications: React.FC = () => {
           <div className="text-lg">Loading...</div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -97,7 +102,7 @@ const JobApplications: React.FC = () => {
               Applications for {job.title}
             </h1>
             <p className="text-gray-600 mt-2">
-              {job.company.name} • {job.location} • {applications.length}{' '}
+              {job.company.name} • {job.location} • {applications.length}{" "}
               applications
             </p>
           </div>
@@ -130,13 +135,16 @@ const JobApplications: React.FC = () => {
                       Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Cover Letter
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {applications.map((application) => {
-                    const candidate = application.candidate as any
+                    const candidate = application.candidate as any;
                     return (
                       <tr key={application._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -160,6 +168,11 @@ const JobApplications: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           {getStatusBadge(application.status)}
                         </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-500 max-w-xs truncate">
+                            {application.coverLetter}
+                          </div>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                           <Button
                             size="sm"
@@ -171,18 +184,21 @@ const JobApplications: React.FC = () => {
                             Download Resume
                           </Button>
 
-                          {application.status === 'pending' && (
+                          {application.status === "pending" && (
                             <>
                               <Button
                                 size="sm"
                                 onClick={() =>
                                   updateApplicationStatus(
                                     application._id,
-                                    'accepted'
+                                    "accepted"
                                   )
                                 }
+                                disabled={actionLoading === application._id}
                               >
-                                Accept
+                                {actionLoading === application._id
+                                  ? "Accepting..."
+                                  : "Accept"}
                               </Button>
                               <Button
                                 variant="destructive"
@@ -190,57 +206,64 @@ const JobApplications: React.FC = () => {
                                 onClick={() =>
                                   updateApplicationStatus(
                                     application._id,
-                                    'rejected'
+                                    "rejected"
                                   )
                                 }
+                                disabled={actionLoading === application._id}
                               >
-                                Reject
+                                {actionLoading === application._id
+                                  ? "Rejecting..."
+                                  : "Reject"}
                               </Button>
                             </>
                           )}
 
-                          {application.status === 'accepted' && (
+                          {application.status === "accepted" && (
                             <Button
                               variant="destructive"
                               size="sm"
                               onClick={() =>
                                 updateApplicationStatus(
                                   application._id,
-                                  'rejected'
+                                  "rejected"
                                 )
                               }
+                              disabled={actionLoading === application._id}
                             >
-                              Revoke
+                              {actionLoading === application._id
+                                ? "Revoking..."
+                                : "Revoke"}
                             </Button>
                           )}
 
-                          {application.status === 'rejected' && (
+                          {application.status === "rejected" && (
                             <Button
                               size="sm"
                               onClick={() =>
                                 updateApplicationStatus(
                                   application._id,
-                                  'accepted'
+                                  "accepted"
                                 )
                               }
+                              disabled={actionLoading === application._id}
                             >
-                              Accept
+                              {actionLoading === application._id
+                                ? "Accepting..."
+                                : "Accept"}
                             </Button>
                           )}
                         </td>
                       </tr>
-                    )
+                    );
                   })}
                 </tbody>
               </table>
             </div>
           )}
         </div>
-
-        {/* Application Details Modal would go here */}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default JobApplications
+export default JobApplications;

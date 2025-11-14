@@ -1,63 +1,64 @@
-import React from 'react'
+import React from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
-} from 'react-router-dom'
-import { AuthProvider, useAuth } from './contexts/AuthContext'
-import Landing from './pages/Landing'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import JobList from './pages/JobList'
-import AdminDashboard from './pages/admin/AdminDashboard'
-import UserManagement from './pages/admin/UserManagement'
-import EmployerDashboard from './pages/employer/EmployerDashboard'
-import PostJob from './pages/employer/PostJob'
-import JobApplications from './pages/employer/JobApplications'
-import JobApplication from './pages/jobseeker/JobApplication'
-import CategoryManagement from './pages/admin/CategoryManagement'
-import Reports from './pages/admin/Reports'
-import MyApplications from './pages/jobseeker/MyApplications'
+} from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import Landing from "./pages/Landing";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import JobList from "./pages/JobList";
+// import JobDetails from "./pages/JobDetails";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import UserManagement from "./pages/admin/UserManagement";
+import CategoryManagement from "./pages/admin/CategoryManagement";
+import Reports from "./pages/admin/Reports";
+import EmployerDashboard from "./pages/employer/EmployerDashboard";
+import PostJob from "./pages/employer/PostJob";
+import JobApplications from "./pages/employer/JobApplications";
+import MyApplications from "./pages/jobseeker/MyApplications";
+import JobApplication from "./pages/jobseeker/JobApplication";
 
 const ProtectedRoute: React.FC<{
-  children: React.ReactNode
-  allowedRoles?: string[]
+  children: React.ReactNode;
+  allowedRoles?: string[];
 }> = ({ children, allowedRoles = [] }) => {
-  const { user, loading } = useAuth()
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading...</div>
       </div>
-    )
+    );
   }
 
   if (!user) {
-    return <Navigate to="/login" />
+    return <Navigate to="/login" />;
   }
 
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/jobs" />
+    return <Navigate to="/jobs" />;
   }
 
-  return <>{children}</>
-}
+  return <>{children}</>;
+};
 
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading } = useAuth()
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading...</div>
       </div>
-    )
+    );
   }
 
-  return !user ? <>{children}</> : <Navigate to="/jobs" />
-}
+  return !user ? <>{children}</> : <Navigate to="/jobs" />;
+};
 
 function App() {
   return (
@@ -83,6 +84,7 @@ function App() {
                 </PublicRoute>
               }
             />
+            {/* <Route path="/jobs/:id" element={<JobDetails />} /> */}
 
             {/* Protected routes - All authenticated users */}
             <Route
@@ -98,7 +100,7 @@ function App() {
             <Route
               path="/admin/dashboard"
               element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={["admin"]}>
                   <AdminDashboard />
                 </ProtectedRoute>
               }
@@ -106,7 +108,7 @@ function App() {
             <Route
               path="/admin/users"
               element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={["admin"]}>
                   <UserManagement />
                 </ProtectedRoute>
               }
@@ -114,7 +116,7 @@ function App() {
             <Route
               path="/admin/categories"
               element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={["admin"]}>
                   <CategoryManagement />
                 </ProtectedRoute>
               }
@@ -122,7 +124,7 @@ function App() {
             <Route
               path="/admin/reports"
               element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={["admin"]}>
                   <Reports />
                 </ProtectedRoute>
               }
@@ -132,7 +134,7 @@ function App() {
             <Route
               path="/employer/dashboard"
               element={
-                <ProtectedRoute allowedRoles={['employer']}>
+                <ProtectedRoute allowedRoles={["employer"]}>
                   <EmployerDashboard />
                 </ProtectedRoute>
               }
@@ -140,7 +142,7 @@ function App() {
             <Route
               path="/employer/post-job"
               element={
-                <ProtectedRoute allowedRoles={['employer']}>
+                <ProtectedRoute allowedRoles={["employer"]}>
                   <PostJob />
                 </ProtectedRoute>
               }
@@ -148,7 +150,7 @@ function App() {
             <Route
               path="/employer/job/:jobId/applications"
               element={
-                <ProtectedRoute allowedRoles={['employer']}>
+                <ProtectedRoute allowedRoles={["employer"]}>
                   <JobApplications />
                 </ProtectedRoute>
               }
@@ -156,18 +158,18 @@ function App() {
 
             {/* Job Seeker routes */}
             <Route
-              path="/apply/:jobId"
+              path="/jobseeker/applications"
               element={
-                <ProtectedRoute allowedRoles={['jobseeker']}>
-                  <JobApplication />
+                <ProtectedRoute allowedRoles={["jobseeker"]}>
+                  <MyApplications />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/jobseeker/applications"
+              path="/apply/:jobId"
               element={
-                <ProtectedRoute allowedRoles={['jobseeker']}>
-                  <MyApplications />
+                <ProtectedRoute allowedRoles={["jobseeker"]}>
+                  <JobApplication />
                 </ProtectedRoute>
               }
             />
@@ -178,7 +180,7 @@ function App() {
         </div>
       </Router>
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;
