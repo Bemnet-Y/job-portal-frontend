@@ -1,99 +1,99 @@
-import React, { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import { useAuth } from '../contexts/AuthContext'
-import { Link, useSearchParams } from 'react-router-dom'
-import Button from '../components/Button'
-import Input from '../components/Input'
-import FileUpload from '../components/FileUpload'
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { useAuth } from "../contexts/AuthContext";
+import { Link, useSearchParams } from "react-router-dom";
+import Button from "../components/Button";
+import Input from "../components/Input";
+import FileUpload from "../components/FileUpload";
 
 interface RegisterForm {
-  name: string
-  email: string
-  password: string
-  confirmPassword: string
-  role: 'admin' | 'employer' | 'jobseeker'
-  companyName?: string
-  companyDescription?: string
-  website?: string
-  businessLicense?: FileList
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  role: "admin" | "employer" | "jobseeker";
+  companyName?: string;
+  companyDescription?: string;
+  website?: string;
+  businessLicense?: FileList;
 }
 
 const Register: React.FC = () => {
-  const { register: registerUser } = useAuth()
+  const { register: registerUser } = useAuth();
   const {
     register,
     handleSubmit,
     watch,
     setValue,
     formState: { errors },
-  } = useForm<RegisterForm>()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [searchParams] = useSearchParams()
+  } = useForm<RegisterForm>();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [searchParams] = useSearchParams();
   const [businessLicenseFile, setBusinessLicenseFile] = useState<File | null>(
     null
-  )
-  const role = watch('role')
-  const password = watch('password')
+  );
+  const role = watch("role");
+  const password = watch("password");
 
   // Set role from URL parameter
   useEffect(() => {
-    const roleParam = searchParams.get('role')
-    if (roleParam === 'jobseeker' || roleParam === 'employer') {
-      setValue('role', roleParam)
+    const roleParam = searchParams.get("role");
+    if (roleParam === "jobseeker" || roleParam === "employer") {
+      setValue("role", roleParam);
     }
-  }, [searchParams, setValue])
+  }, [searchParams, setValue]);
 
   const handleFileSelect = (file: File) => {
-    setBusinessLicenseFile(file)
-  }
+    setBusinessLicenseFile(file);
+  };
 
   const readFileAsBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(reader.result as string)
-      reader.onerror = reject
-      reader.readAsDataURL(file)
-    })
-  }
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
 
   const onSubmit = async (data: RegisterForm) => {
     try {
-      setLoading(true)
-      setError('')
+      setLoading(true);
+      setError("");
 
       const registerData: any = {
         name: data.name,
         email: data.email,
         password: data.password,
         role: data.role,
-      }
+      };
 
-      if (data.role === 'employer') {
+      if (data.role === "employer") {
         if (!businessLicenseFile) {
-          setError('Business license is required for employers')
-          return
+          setError("Business license is required for employers");
+          return;
         }
 
         const businessLicenseBase64 = await readFileAsBase64(
           businessLicenseFile
-        )
+        );
 
         registerData.company = {
           name: data.companyName,
           description: data.companyDescription,
           website: data.website,
-        }
-        registerData.businessLicense = businessLicenseBase64
+        };
+        registerData.businessLicense = businessLicenseBase64;
       }
 
-      await registerUser(registerData)
+      await registerUser(registerData);
     } catch (error: any) {
-      setError(error.message)
+      setError(error.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -103,7 +103,7 @@ const Register: React.FC = () => {
             Create your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
+            Or{" "}
             <Link
               to="/login"
               className="font-medium text-blue-600 hover:text-blue-500"
@@ -132,7 +132,7 @@ const Register: React.FC = () => {
                 id="name"
                 className="mt-1"
                 placeholder="Enter your full name"
-                {...register('name', { required: 'Name is required' })}
+                {...register("name", { required: "Name is required" })}
               />
               {errors.name && (
                 <p className="text-red-500 text-sm mt-1">
@@ -153,11 +153,11 @@ const Register: React.FC = () => {
                 type="email"
                 className="mt-1"
                 placeholder="Enter your email"
-                {...register('email', {
-                  required: 'Email is required',
+                {...register("email", {
+                  required: "Email is required",
                   pattern: {
                     value: /^\S+@\S+$/i,
-                    message: 'Invalid email address',
+                    message: "Invalid email address",
                   },
                 })}
               />
@@ -182,11 +182,11 @@ const Register: React.FC = () => {
                 type="password"
                 className="mt-1"
                 placeholder="Enter your password"
-                {...register('password', {
-                  required: 'Password is required',
+                {...register("password", {
+                  required: "Password is required",
                   minLength: {
                     value: 6,
-                    message: 'Password must be at least 6 characters',
+                    message: "Password must be at least 6 characters",
                   },
                 })}
               />
@@ -209,10 +209,10 @@ const Register: React.FC = () => {
                 type="password"
                 className="mt-1"
                 placeholder="Confirm your password"
-                {...register('confirmPassword', {
-                  required: 'Please confirm your password',
+                {...register("confirmPassword", {
+                  required: "Please confirm your password",
                   validate: (value) =>
-                    value === password || 'Passwords do not match',
+                    value === password || "Passwords do not match",
                 })}
               />
               {errors.confirmPassword && (
@@ -233,7 +233,7 @@ const Register: React.FC = () => {
             <select
               id="role"
               className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
-              {...register('role', { required: 'Please select a role' })}
+              {...register("role", { required: "Please select a role" })}
             >
               <option value="">Select Role</option>
               <option value="jobseeker">Job Seeker</option>
@@ -244,7 +244,7 @@ const Register: React.FC = () => {
             )}
           </div>
 
-          {role === 'employer' && (
+          {role === "employer" && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -258,8 +258,8 @@ const Register: React.FC = () => {
                     id="companyName"
                     className="mt-1"
                     placeholder="Enter your company name"
-                    {...register('companyName', {
-                      required: 'Company name is required for employers',
+                    {...register("companyName", {
+                      required: "Company name is required for employers",
                     })}
                   />
                   {errors.companyName && (
@@ -281,7 +281,7 @@ const Register: React.FC = () => {
                     type="url"
                     className="mt-1"
                     placeholder="https://example.com"
-                    {...register('website')}
+                    {...register("website")}
                   />
                 </div>
               </div>
@@ -298,7 +298,7 @@ const Register: React.FC = () => {
                   className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
                   placeholder="Brief description of your company"
                   rows={3}
-                  {...register('companyDescription')}
+                  {...register("companyDescription")}
                 />
               </div>
 
@@ -332,17 +332,17 @@ const Register: React.FC = () => {
             </>
           )}
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Creating account...' : 'Create account'}
+          <Button type="button" className="w-full" disabled={loading}>
+            {loading ? "Creating account..." : "Create account"}
           </Button>
 
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              By creating an account, you agree to our{' '}
+              By creating an account, you agree to our{" "}
               <a href="#" className="text-blue-600 hover:text-blue-500">
                 Terms of Service
-              </a>{' '}
-              and{' '}
+              </a>{" "}
+              and{" "}
               <a href="#" className="text-blue-600 hover:text-blue-500">
                 Privacy Policy
               </a>
@@ -351,7 +351,7 @@ const Register: React.FC = () => {
         </form>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Register
+export default Register;
